@@ -1,0 +1,31 @@
+version: "3"
+services:
+  elasticsearch:
+    image: redteamobile/elasticsearch:5.2.2
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - cluster.name=es-stag
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.monitoring.enabled=false
+      - xpack.graph.enabled=false
+      - xpack.watcher.enabled=false
+      - SERVICE_NAME=elasticsearch
+      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - elk_back
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.labels.app_role == elasticsearch]
+
+networks:
+  elk_front:
+  elk_back:
+
+volumes:
+  es_data:
