@@ -1,4 +1,4 @@
-** This project settles down a ELK stack in docker swarm mode. **
+> This project settles down a ELK stack in docker swarm mode.
 
 ## Prerequisite
 * A docker swarm cluster with several nodes;
