@@ -1,0 +1,50 @@
+version: "3"
+services:
+  elasticsearch:
+    image: "redteamobile/elasticsearch:5.2.2"
+    environment:
+      - "cluster.name=es-stag"
+      - "xpack.security.enabled=false"
+      - "xpack.monitoring.enabled=false"
+      - "xpack.graph.enabled=false"
+      - "xpack.watcher.enabled=false"
+      - "SERVICE_NAME=elasticsearch"
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - backend
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.labels.app_role == elasticsearch]
+
+  indexer:
+    image: "redteamobile/logstash:5.2.2-indexer"
+    environment:
+      - "KAFKA_BOOTSTRAP_SERVERS="
+    networks: 
+      - backend
+    depends_on:
+      - elasticsearch
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  kibana:
+    image: "redteamobile/kibana:5.2.2"
+    networks:
+      - backend
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    deploy:
+      mode: replicated
+      replicas: 1
+
+networks:
+  backend:
+
+volumes:
+  es_data:
