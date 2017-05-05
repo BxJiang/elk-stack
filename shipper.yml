@@ -3,7 +3,7 @@ services:
   shipper:
     image: "redteamobile/logstash:5.2.2-shipper"
     environment:
-      - "KAFKA_BOOTSTRAP_SERVERS="
+      - "KAFKA_BOOTSTRAP_SERVERS=172.31.28.28:9092,172.31.16.213:9092,172.31.17.24:9092"
       - "S3_ACCESS_KEY_ID="
       - "S3_SECRET_ACCESS_KEY="
       - "S3_REGION="

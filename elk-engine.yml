@@ -1,50 +1,50 @@
-version: "3"
-services:
-  elasticsearch:
-    image: "redteamobile/elasticsearch:5.2.2"
-    environment:
-      - "cluster.name=es-stag"
-      - "xpack.security.enabled=false"
-      - "xpack.monitoring.enabled=false"
-      - "xpack.graph.enabled=false"
-      - "xpack.watcher.enabled=false"
-      - "SERVICE_NAME=elasticsearch"
-      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
-    volumes:
-      - es_data:/usr/share/elasticsearch/data
-    networks:
-      - backend
-    deploy:
-      mode: global
-      placement:
-        constraints: [node.labels.app_role == elasticsearch]
+version: '3'
 
+services:
+  master:
+    image: itzg/elasticsearch
+    environment:
+      TYPE: MASTER
+      UNICAST_HOSTS: master
+      MIN_MASTERS: 1
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+  data:
+    image: itzg/elasticsearch
+    environment:
+      TYPE: DATA
+      UNICAST_HOSTS: master
+      DISCOVER_TRANSPORT_IP: eth0
+      DISCOVER_HTTP_IP: eth0
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 60s
+  gateway:
+    image: itzg/elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      TYPE: GATEWAY
+      UNICAST_HOSTS: master
+  ingest:
+    image: itzg/elasticsearch
+    environment:
+      TYPE: INGEST
+      UNICAST_HOSTS: master
+  kibana:
+    image: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_URL: http://gateway:9200
   indexer:
     image: "redteamobile/logstash:5.2.2-indexer"
     environment:
-      - "KAFKA_BOOTSTRAP_SERVERS="
-    networks: 
-      - backend
+      - "KAFKA_BOOTSTRAP_SERVERS=172.31.28.28:9092,172.31.16.213:9092,172.31.17.24:9092"
     depends_on:
-      - elasticsearch
-    deploy:
-      mode: replicated
-      replicas: 1
-
-  kibana:
-    image: "redteamobile/kibana:5.2.2"
-    networks:
-      - backend
-    ports:
-      - "5601:5601"
-    depends_on:
-      - elasticsearch
-    deploy:
-      mode: replicated
-      replicas: 1
-
-networks:
-  backend:
-
-volumes:
-  es_data:
+      - ingest
